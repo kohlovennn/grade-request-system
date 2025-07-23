@@ -14,38 +14,72 @@
         .hidden { display: none; }
         .card { background-color: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
         .btn-primary { background-color: #4299e1; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
-        .btn-primary:hover { background-color: #3182ce; }
         .btn-danger { background-color: #f56565; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
-        .btn-danger:hover { background-color: #e53e3e; }
         .btn-success { background-color: #48bb78; color: white; padding: 8px 16px; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
-        .btn-success:hover { background-color: #38a169; }
         .badge { padding: 4px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
         .badge-yellow { background-color: #fefcbf; color: #975a16; }
         .badge-green { background-color: #c6f6d5; color: #276749; }
         .badge-red { background-color: #fed7d7; color: #9b2c2c; }
-        .badge-blue { background-color: #bee3f8; color: #2c5282; }
         .badge-purple { background-color: #e9d8fd; color: #553c9a; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         th { background-color: #f7fafc; font-weight: 600; }
-        tr:hover { background-color: #f7fafc; }
-        .tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s; }
+        .tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; }
         .tab.active { border-bottom: 2px solid #4299e1; color: #4299e1; font-weight: 600; }
     </style>
 </head>
 <body>
     <div id="loading" class="loading hidden"><div class="spinner"></div></div>
-    <div id="loginForm" class="container mx-auto px-4 py-8 max-w-md"> ... (เนื้อหา login form) ... </div>
-    <div id="adminDashboard" class="container mx-auto px-4 py-8 hidden"> ... (เนื้อหา admin dashboard) ... </div>
-    <div id="teacherDashboard" class="container mx-auto px-4 py-8 hidden"> ... (เนื้อหา teacher dashboard) ... </div>
-    <div id="studentDashboard" class="container mx-auto px-4 py-8 hidden"> ... (เนื้อหา student dashboard) ... </div>
-    <div id="requestModal" class="fixed inset-0 ... hidden z-50"> ... (เนื้อหา request modal) ... </div>
-    <div id="reviewModal" class="fixed inset-0 ... hidden z-50"> ... (เนื้อหา review modal) ... </div>
-    <div id="adminApprovalModal" class="fixed inset-0 ... hidden z-50"> ... (เนื้อหา admin approval modal) ... </div>
-    <div id="detailsModal" class="fixed inset-0 ... hidden z-50"> ... (เนื้อหา details modal) ... </div>
+
+    <div id="loginForm" class="container mx-auto px-4 py-8 max-w-md">
+        <div class="card">
+            <h2 class="text-3xl font-bold mb-2 text-center text-gray-800">ระบบแก้ไขผลการเรียน</h2>
+            <h3 class="text-xl font-semibold mb-6 text-center text-gray-700">ปีการศึกษา 2566-2567</h3>
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700 mb-2">รหัสผู้ใช้</label>
+                <input type="text" id="username" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 mb-2">รหัสผ่าน</label>
+                <input type="password" id="password" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button id="loginBtn" class="w-full btn-primary">เข้าสู่ระบบ</button>
+            <div id="loginError" class="mt-4 text-red-500 text-center hidden"></div>
+            <div class="mt-6 text-center text-xs text-gray-500">© 2025 โรงเรียนเดื่อวิทยาคาร</div>
+        </div>
+    </div>
+
+    <div id="adminDashboard" class="container mx-auto px-4 py-8 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
+            <div>
+                <span id="adminUserInfo" class="mr-4"></span>
+                <button id="adminLogoutBtn" class="btn-danger">ออกจากระบบ</button>
+            </div>
+        </div>
+        </div>
+
+    <div id="teacherDashboard" class="container mx-auto px-4 py-8 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Teacher Dashboard</h2>
+            <div>
+                <span id="teacherUserInfo" class="mr-4"></span>
+                <button id="teacherLogoutBtn" class="btn-danger">ออกจากระบบ</button>
+            </div>
+        </div>
+        </div>
+
+    <div id="studentDashboard" class="container mx-auto px-4 py-8 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Student Dashboard</h2>
+            <div>
+                <span id="studentUserInfo" class="mr-4"></span>
+                <button id="studentLogoutBtn" class="btn-danger">ออกจากระบบ</button>
+            </div>
+        </div>
+        </div>
 
 <script>
-    // === START FINAL SCRIPT V3 ===
     document.addEventListener('DOMContentLoaded', function() {
         
         // --- Global State ---
@@ -159,13 +193,22 @@
         
         function showDashboard() {
             if (!currentUser) return;
+
+            hideLoading(); // Hide loading as soon as we know which dashboard to show
+            
             if (currentUser.role === 'admin') {
                 showView('adminDashboard');
                 getEl('adminUserInfo').textContent = currentUser.name;
-                // Add admin rendering logic here
+                // Render admin specific content here
+            } else if (currentUser.role === 'teacher') {
+                showView('teacherDashboard');
+                getEl('teacherUserInfo').textContent = currentUser.name;
+                 // Render teacher specific content here
+            } else if (currentUser.role === 'student') {
+                showView('studentDashboard');
+                getEl('studentUserInfo').textContent = currentUser.name;
+                 // Render student specific content here
             }
-            // Add other roles here...
-            hideLoading();
         }
         
         // --- Helper Functions ---
@@ -174,11 +217,14 @@
 
         // --- Initializer ---
         function init() {
+            // Setup all event listeners
             getEl('loginBtn').addEventListener('click', handleLogin);
             getEl('adminLogoutBtn').addEventListener('click', logout);
             getEl('teacherLogoutBtn').addEventListener('click', logout);
             getEl('studentLogoutBtn').addEventListener('click', logout);
+            // Add other event listeners for forms and buttons as you build them out
             
+            // Check for a saved user session
             const savedUser = localStorage.getItem('currentUser');
             if (savedUser) {
                 showLoading();
@@ -186,6 +232,7 @@
                 loadDashboardData();
             } else {
                 showView('loginForm');
+                hideLoading(); // Hide loading if no user is logged in
             }
         }
 
