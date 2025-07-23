@@ -35,159 +35,163 @@
 </head>
 <body>
     <div id="loading" class="loading hidden"><div class="spinner"></div></div>
-    <div id="loginForm" class="container mx-auto px-4 py-8 max-w-md"> ... (เนื้อหาของ login form ทั้งหมด) ... </div>
-    <div id="adminDashboard" class="container mx-auto px-4 py-8 hidden"> ... (เนื้อหาของ admin dashboard ทั้งหมด) ... </div>
-    <div id="teacherDashboard" class="container mx-auto px-4 py-8 hidden"> ... (เนื้อหาของ teacher dashboard ทั้งหมด) ... </div>
-    <div id="studentDashboard" class="container mx-auto px-4 py-8 hidden"> ... (เนื้อหาของ student dashboard ทั้งหมด) ... </div>
-    <div id="requestModal" class="fixed inset-0 bg-black bg-opacity-50 ... hidden z-50"> ... (เนื้อหาของ request modal ทั้งหมด) ... </div>
-    <div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 ... hidden z-50"> ... (เนื้อหาของ review modal ทั้งหมด) ... </div>
-    <div id="adminApprovalModal" class="fixed inset-0 bg-black bg-opacity-50 ... hidden z-50"> ... (เนื้อหาของ admin approval modal ทั้งหมด) ... </div>
-    <div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 ... hidden z-50"> ... (เนื้อหาของ details modal ทั้งหมด) ... </div>
+    <div id="loginForm" class="container mx-auto px-4 py-8 max-w-md"> ... (เนื้อหา login form) ... </div>
+    <div id="adminDashboard" class="container mx-auto px-4 py-8 hidden"> ... (เนื้อหา admin dashboard) ... </div>
+    <div id="teacherDashboard" class="container mx-auto px-4 py-8 hidden"> ... (เนื้อหา teacher dashboard) ... </div>
+    <div id="studentDashboard" class="container mx-auto px-4 py-8 hidden"> ... (เนื้อหา student dashboard) ... </div>
+    <div id="requestModal" class="fixed inset-0 ... hidden z-50"> ... (เนื้อหา request modal) ... </div>
+    <div id="reviewModal" class="fixed inset-0 ... hidden z-50"> ... (เนื้อหา review modal) ... </div>
+    <div id="adminApprovalModal" class="fixed inset-0 ... hidden z-50"> ... (เนื้อหา admin approval modal) ... </div>
+    <div id="detailsModal" class="fixed inset-0 ... hidden z-50"> ... (เนื้อหา details modal) ... </div>
 
 <script>
-    // === START FINAL SCRIPT V2 ===
-    
-    // --- Global State ---
-    let currentUser = null;
-    let allUsers = [];
-    let allSubjects = [];
-    let allGrades = [];
-    let allRequests = [];
-
-    // --- DOM Element Getters (called when needed) ---
-    const getEl = (id) => document.getElementById(id);
-
-    // --- API Communication ---
-    async function apiCall(endpoint, data) {
-        const response = await fetch(`/.netlify/functions/${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        if (!response.ok) {
-            const errorInfo = await response.json();
-            throw new Error(errorInfo.message || `Server error at ${endpoint}`);
-        }
-        return response.json();
-    }
-
-    // --- Core Logic & State Management ---
-    async function handleLogin() {
-        showLoading();
-        getEl('loginError').classList.add('hidden');
-        const username = getEl('username').value;
-        const password = getEl('password').value;
-        if (!username || !password) {
-            onLoginFailure('กรุณากรอกรหัสผู้ใช้และรหัสผ่าน');
-            return;
-        }
-        try {
-            const user = await apiCall('login', { username, password });
-            onLoginSuccess(user);
-        } catch (error) {
-            onLoginFailure(error.message);
-        }
-    }
-
-    function onLoginSuccess(user) {
-        if (user) {
-            currentUser = user;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            loadDashboardData();
-        } else {
-            onLoginFailure('รหัสผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
-        }
-    }
-
-    function onLoginFailure(error) {
-        getEl('loginError').textContent = error;
-        getEl('loginError').classList.remove('hidden');
-        hideLoading();
-    }
-
-    function logout() {
-        localStorage.removeItem('currentUser');
-        currentUser = null;
-        showView('loginForm');
-    }
-
-    async function loadDashboardData() {
-        showLoading();
-        try {
-            const role = currentUser.role;
-            const id = currentUser.id;
-            let data;
-            if (role === 'student') data = await apiCall('getStudentData', { id });
-            else if (role === 'teacher') data = await apiCall('getTeacherData', { id });
-            else if (role === 'admin') data = await apiCall('getAdminData', { id });
-            
-            onDataLoaded(data);
-        } catch (error) {
-            onDataLoadError(error.message);
-        }
-    }
-
-    function onDataLoaded(data) {
-        if (!data) {
-            onDataLoadError("Received null data from server.");
-            return;
-        }
-        allUsers = data.users || [];
-        allSubjects = data.subjects || [];
-        allGrades = data.grades || [];
-        allRequests = data.requests || [];
-        showDashboard();
-    }
-
-    function onDataLoadError(error) {
-        console.error('Error loading data:', error);
-        alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + error);
-        hideLoading();
-        logout();
-    }
-
-    // --- UI Rendering ---
-    function showView(viewId) {
-        ['loginForm', 'adminDashboard', 'teacherDashboard', 'studentDashboard'].forEach(id => {
-            const el = getEl(id);
-            if (el) el.classList.add('hidden');
-        });
-        const viewToShow = getEl(viewId);
-        if (viewToShow) viewToShow.classList.remove('hidden');
-    }
-    
-    function showDashboard() {
-        if (!currentUser) return;
-        if (currentUser.role === 'admin') {
-            showView('adminDashboard');
-            getEl('adminUserInfo').textContent = currentUser.name;
-            // Add admin rendering logic here
-        }
-        // Add else if for teacher and student
-        hideLoading();
-    }
-    
-    // --- Helper Functions ---
-    function showLoading() { getEl('loading').classList.remove('hidden'); }
-    function hideLoading() { getEl('loading').classList.add('hidden'); }
-
-    // --- Initializer ---
-    function init() {
-        getEl('loginBtn').addEventListener('click', handleLogin);
-        getEl('adminLogoutBtn').addEventListener('click', logout);
-        // Add other listeners here...
+    // === START FINAL SCRIPT V3 ===
+    document.addEventListener('DOMContentLoaded', function() {
         
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            showLoading();
-            currentUser = JSON.parse(savedUser);
-            loadDashboardData();
+        // --- Global State ---
+        let currentUser = null;
+        let allUsers = [];
+        let allSubjects = [];
+        let allGrades = [];
+        let allRequests = [];
+
+        // --- DOM Element Getters ---
+        const getEl = (id) => document.getElementById(id);
+
+        // --- API Communication ---
+        async function apiCall(endpoint, data) {
+            const response = await fetch(`/.netlify/functions/${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+                const errorInfo = await response.json();
+                throw new Error(errorInfo.message || `Server error at ${endpoint}`);
+            }
+            return response.json();
         }
-    }
 
-    // Defer initialization until the DOM is fully loaded
-    document.addEventListener('DOMContentLoaded', init);
+        // --- Core Logic & State Management ---
+        async function handleLogin() {
+            showLoading();
+            getEl('loginError').classList.add('hidden');
+            const username = getEl('username').value;
+            const password = getEl('password').value;
+            if (!username || !password) {
+                onLoginFailure('กรุณากรอกรหัสผู้ใช้และรหัสผ่าน');
+                return;
+            }
+            try {
+                const user = await apiCall('login', { username, password });
+                onLoginSuccess(user);
+            } catch (error) {
+                onLoginFailure(error.message);
+            }
+        }
 
+        function onLoginSuccess(user) {
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                loadDashboardData();
+            } else {
+                onLoginFailure('รหัสผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+            }
+        }
+
+        function onLoginFailure(error) {
+            getEl('loginError').textContent = error;
+            getEl('loginError').classList.remove('hidden');
+            hideLoading();
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            currentUser = null;
+            showView('loginForm');
+        }
+
+        async function loadDashboardData() {
+            showLoading();
+            try {
+                const role = currentUser.role;
+                const id = currentUser.id;
+                let data;
+                if (role === 'student') data = await apiCall('getStudentData', { id });
+                else if (role === 'teacher') data = await apiCall('getTeacherData', { id });
+                else if (role === 'admin') data = await apiCall('getAdminData', { id });
+                
+                onDataLoaded(data);
+            } catch (error) {
+                onDataLoadError(error.message);
+            }
+        }
+
+        function onDataLoaded(data) {
+            if (!data) {
+                onDataLoadError("Received null data from server.");
+                return;
+            }
+            allUsers = data.users || [];
+            allSubjects = data.subjects || [];
+            allGrades = data.grades || [];
+            allRequests = data.requests || [];
+            showDashboard();
+        }
+
+        function onDataLoadError(error) {
+            console.error('Error loading data:', error);
+            alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + error);
+            hideLoading();
+            logout();
+        }
+
+        // --- UI Rendering ---
+        function showView(viewId) {
+            ['loginForm', 'adminDashboard', 'teacherDashboard', 'studentDashboard'].forEach(id => {
+                const el = getEl(id);
+                if (el) el.classList.add('hidden');
+            });
+            const viewToShow = getEl(viewId);
+            if (viewToShow) viewToShow.classList.remove('hidden');
+        }
+        
+        function showDashboard() {
+            if (!currentUser) return;
+            if (currentUser.role === 'admin') {
+                showView('adminDashboard');
+                getEl('adminUserInfo').textContent = currentUser.name;
+                // Add admin rendering logic here
+            }
+            // Add other roles here...
+            hideLoading();
+        }
+        
+        // --- Helper Functions ---
+        function showLoading() { getEl('loading').classList.remove('hidden'); }
+        function hideLoading() { getEl('loading').classList.add('hidden'); }
+
+        // --- Initializer ---
+        function init() {
+            getEl('loginBtn').addEventListener('click', handleLogin);
+            getEl('adminLogoutBtn').addEventListener('click', logout);
+            getEl('teacherLogoutBtn').addEventListener('click', logout);
+            getEl('studentLogoutBtn').addEventListener('click', logout);
+            
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                showLoading();
+                currentUser = JSON.parse(savedUser);
+                loadDashboardData();
+            } else {
+                showView('loginForm');
+            }
+        }
+
+        // Run the app
+        init();
+    });
 </script>
 </body>
 </html>
