@@ -1,0 +1,11 @@
+[build]
+  # โฟลเดอร์ที่เก็บไฟล์ HTML/CSS/JS ของเรา
+  publish = "public" 
+  # โฟลเดอร์ที่เก็บ Netlify Functions
+  functions = "netlify/functions"
+
+# Redirects rule to make sure our single page app works
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

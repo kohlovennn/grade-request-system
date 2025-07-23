@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบแก้ไขผลการเรียน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            background-color: #4299e1;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #3182ce;
+        }
+        .btn-danger {
+            background-color: #f56565;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-danger:hover {
+            background-color: #e53e3e;
+        }
+        .btn-success {
+            background-color: #48bb78;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-success:hover {
+            background-color: #38a169;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-yellow {
+            background-color: #fefcbf;
+            color: #975a16;
+        }
+        .badge-green {
+            background-color: #c6f6d5;
+            color: #276749;
+        }
+        .badge-red {
+            background-color: #fed7d7;
+            color: #9b2c2c;
+        }
+        .badge-blue {
+            background-color: #bee3f8;
+            color: #2c5282;
+        }
+        .badge-purple {
+            background-color: #e9d8fd;
+            color: #553c9a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background-color: #f7fafc;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f7fafc;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            border-bottom: 2px solid #4299e1;
+            color: #4299e1;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- ALL YOUR HTML BODY CONTENT IS IDENTICAL TO THE ORIGINAL FILE -->
+    <!-- ... (PASTE THE ENTIRE BODY from your original file here) ... -->
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginForm" class="container mx-auto px-4 py-8 max-w-md">
+        <div class="card">
+            <h2 class="text-3xl font-bold mb-2 text-center text-gray-800">ระบบแก้ไขผลการเรียน</h2>
+            <h3 class="text-xl font-semibold mb-6 text-center text-gray-700">ปีการศึกษา 2566-2567</h3>
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700 mb-2">รหัสผู้ใช้</label>
+                <input type="text" id="username" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 mb-2">รหัสผ่าน</label>
+                <input type="password" id="password" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button id="loginBtn" class="w-full btn-primary">เข้าสู่ระบบ</button>
+            <div id="loginError" class="mt-4 text-red-500 text-center hidden"></div>
+            <div class="mt-6 text-center text-xs text-gray-500">© 2025 โรงเรียนเดื่อวิทยาคาร</div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="container mx-auto px-4 py-8 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">ระบบแก้ไขผลการเรียน</h2>
+            <div class="flex items-center">
+                <span id="adminUserInfo" class="mr-4"></span>
+                <button id="adminLogoutBtn" class="btn-danger">ออกจากระบบ</button>
+            </div>
+        </div>
+        
+        <!-- Admin Tabs -->
+        <div class="flex border-b mb-6">
+            <div id="adminTabSummary" class="tab active">สรุปภาพรวม</div>
+            <div id="adminTabAllRequests" class="tab">รายการคำร้องทั้งหมด</div>
+            <div id="adminTabPendingApproval" class="tab">รายการรออนุมัติ</div>
+        </div>
+        
+        <!-- Admin Summary Tab Content -->
+        <div id="adminSummaryContent" class="card">
+            <h2 class="text-xl font-bold mb-6 text-gray-800">สรุปผลการแก้ไขผลการเรียนทั้งหมด</h2>
+            
+            <!-- Teacher Summary Section -->
+            <div id="teacherSummary" class="mb-8">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">สรุปตามครูผู้สอน</h3>
+                <div id="teacherSummaryList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Teacher summary cards will be inserted here -->
+                </div>
+            </div>
+            
+            <!-- Request Status Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h3 class="font-semibold text-blue-800">คำร้องทั้งหมด</h3>
+                    <p id="totalRequests" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h3 class="font-semibold text-yellow-800">รออนุมัติจากครู</h3>
+                    <p id="pendingRequests" class="text-2xl font-bold text-yellow-600">0</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <h3 class="font-semibold text-purple-800">รออนุมัติจากงานวัดผล</h3>
+                    <p id="teacherApprovedRequests" class="text-2xl font-bold text-purple-600">0</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="font-semibold text-green-800">อนุมัติแล้ว</h3>
+                    <p id="approvedRequests" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+            </div>
+            
+            <!-- Recent Requests -->
+            <div>
+                <h3 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">คำร้องล่าสุด</h3>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>รหัสคำร้อง</th>
+                                <th>วันที่</th>
+                                <th>นักเรียน</th>
+                                <th>รายวิชา</th>
+                                <th>ครูผู้สอน</th>
+                                <th>เกรดเดิม → เกรดใหม่</th>
+                                <th>สถานะ</th>
+                                <th>รายละเอียด</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentRequestsTable">
+                            <!-- Recent request rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin All Requests Tab Content -->
+        <div id="adminAllRequestsContent" class="card hidden">
+            <h2 class="text-xl font-bold mb-6 text-gray-800">รายการคำร้องทั้งหมด</h2>
+            
+            <div class="mb-6">
+                <div class="flex flex-wrap gap-2">
+                    <button id="filterAllBtn" class="px-3 py-1 rounded-full bg-gray-200 text-gray-800 text-sm font-medium">ทั้งหมด</button>
+                    <button id="filterPendingBtn" class="px-3 py-1 rounded-full bg-gray-200 text-gray-800 text-sm font-medium">รออนุมัติจากครู</button>
+                    <button id="filterTeacherApprovedBtn" class="px-3 py-1 rounded-full bg-gray-200 text-gray-800 text-sm font-medium">รออนุมัติจากงานวัดผล</button>
+                    <button id="filterApprovedBtn" class="px-3 py-1 rounded-full bg-gray-200 text-gray-800 text-sm font-medium">อนุมัติแล้ว</button>
+                    <button id="filterRejectedBtn" class="px-3 py-1 rounded-full bg-gray-200 text-gray-800 text-sm font-medium">ไม่อนุมัติ</button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รหัสคำร้อง</th>
+                            <th>วันที่</th>
+                            <th>นักเรียน</th>
+                            <th>รหัสวิชา</th>
+                            <th>รายวิชา</th>
+                            <th>ภาคเรียน/ปีการศึกษา</th>
+                            <th>ครูผู้สอน</th>
+                            <th>เกรดเดิม</th>
+                            <th>เกรดใหม่</th>
+                            <th>สถานะ</th>
+                            <th>การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allRequestsTable">
+                        <!-- Request rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admin Pending Approval Tab Content -->
+        <div id="adminPendingApprovalContent" class="card hidden">
+            <h2 class="text-xl font-bold mb-6 text-gray-800">รายการรออนุมัติจากงานวัดผล</h2>
+            
+            <div class="overflow-x-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รหัสคำร้อง</th>
+                            <th>วันที่</th>
+                            <th>นักเรียน</th>
+                            <th>รหัสวิชา</th>
+                            <th>รายวิชา</th>
+                            <th>ภาคเรียน/ปีการศึกษา</th>
+                            <th>ครูผู้สอน</th>
+                            <th>เกรดเดิม</th>
+                            <th>เกรดใหม่</th>
+                            <th>การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingApprovalTable">
+                        <!-- Pending approval rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Dashboard -->
+    <div id="teacherDashboard" class="container mx-auto px-4 py-8 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">ระบบแก้ไขผลการเรียน</h2>
+            <div class="flex items-center">
+                <span id="teacherUserInfo" class="mr-4"></span>
+                <button id="teacherLogoutBtn" class="btn-danger">ออกจากระบบ</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="text-xl font-bold mb-6 text-gray-800">คำร้องขอแก้ไขผลการเรียน</h2>
+            
+            <!-- Request Status Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h3 class="font-semibold text-blue-800">คำร้องทั้งหมด</h3>
+                    <p id="teacherTotalRequests" class="text-2xl font-bold text-blue-600">0</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h3 class="font-semibold text-yellow-800">รอการอนุมัติ</h3>
+                    <p id="teacherPendingRequests" class="text-2xl font-bold text-yellow-600">0</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <h3 class="font-semibold text-purple-800">รออนุมัติจากงานวัดผล</h3>
+                    <p id="teacherWaitingAdminRequests" class="text-2xl font-bold text-purple-600">0</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="font-semibold text-green-800">อนุมัติแล้ว</h3>
+                    <p id="teacherApprovedRequests" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+            </div>
+            
+            <!-- Teacher's Requests Table -->
+            <h3 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">รายการคำร้องของคุณ</h3>
+            <div class="overflow-x-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>รหัสคำร้อง</th>
+                            <th>วันที่</th>
+                            <th>นักเรียน</th>
+                            <th>รหัสวิชา</th>
+                            <th>รายวิชา</th>
+                            <th>ภาคเรียน/ปีการศึกษา</th>
+                            <th>เกรดเดิม</th>
+                            <th>เกรดใหม่</th>
+                            <th>สถานะ</th>
+                            <th>การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherRequestsTable">
+                        <!-- Request rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div id="studentDashboard" class="container mx-auto px-4 py-8 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">ระบบแก้ไขผลการเรียน</h2>
+            <div class="flex items-center">
+                <span id="studentUserInfo" class="mr-4"></span>
+                <button id="studentLogoutBtn" class="btn-danger">ออกจากระบบ</button>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Student Grades -->
+            <div class="md:col-span-2">
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800">ผลการเรียนของฉัน</h2>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>รหัสวิชา</th>
+                                    <th>รายวิชา</th>
+                                    <th>ภาคเรียน/ปีการศึกษา</th>
+                                    <th>ครูผู้สอน</th>
+                                    <th>เกรด</th>
+                                    <th>การดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentGradesTable">
+                                <!-- Grade rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Student Requests -->
+            <div class="md:col-span-1">
+                <div class="card h-full">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800">คำร้องของฉัน</h2>
+                    <div id="studentRequestsList" class="space-y-4">
+                        <!-- Request cards will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Form Modal -->
+    <div id="requestModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-6 text-gray-800">ยื่นคำร้องขอแก้ไขผลการเรียน</h2>
+            <form id="requestForm">
+                <input type="hidden" id="requestSubjectId">
+                <input type="hidden" id="requestOldGrade">
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">รหัสวิชา:</label>
+                    <p id="requestSubjectCode" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">รายวิชา:</label>
+                    <p id="requestSubjectName" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">ภาคเรียน/ปีการศึกษา:</label>
+                    <p id="requestSemester" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">เกรดปัจจุบัน:</label>
+                    <p id="requestCurrentGrade" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="requestNewGrade" class="block text-gray-700 mb-2">เกรดที่ต้องการแก้ไข:</label>
+                    <select id="requestNewGrade" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <!-- Options will be dynamically populated based on current grade -->
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="requestReason" class="block text-gray-700 mb-2">งานที่ได้รับมอบหมาย:</label>
+                    <textarea id="requestReason" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelRequestBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md transition duration-300">ยกเลิก</button>
+                    <button type="submit" class="btn-primary">ยื่นคำร้อง</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Teacher Review Request Modal -->
+    <div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-6 text-gray-800">พิจารณาคำร้องขอแก้ไขผลการเรียน</h2>
+            <form id="reviewForm">
+                <input type="hidden" id="reviewRequestId">
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">นักเรียน:</label>
+                    <p id="reviewStudentName" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">รหัสวิชา:</label>
+                    <p id="reviewSubjectCode" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">รายวิชา:</label>
+                    <p id="reviewSubjectName" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">ภาคเรียน/ปีการศึกษา:</label>
+                    <p id="reviewSemester" class="font-semibold"></p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">เกรดเดิม:</label>
+                        <p id="reviewOldGrade" class="font-semibold"></p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">เกรดที่ขอแก้ไข:</label>
+                        <p id="reviewNewGrade" class="font-semibold"></p>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">งานที่ได้รับมอบหมาย:</label>
+                    <p id="reviewReason" class="italic text-gray-600 border-l-4 border-gray-300 pl-3 py-2"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="reviewFinalGrade" class="block text-gray-700 mb-2">เกรดที่อนุมัติ:</label>
+                    <select id="reviewFinalGrade" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <!-- Options will be dynamically populated based on old grade -->
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="reviewComment" class="block text-gray-700 mb-2">ความคิดเห็น:</label>
+                    <textarea id="reviewComment" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelReviewBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md transition duration-300">ยกเลิก</button>
+                    <button type="button" id="rejectRequestBtn" class="btn-danger">ไม่อนุมัติ</button>
+                    <button type="button" id="approveRequestBtn" class="btn-success">อนุมัติ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Approval Modal -->
+    <div id="adminApprovalModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-6 text-gray-800">อนุมัติคำร้องขอแก้ไขผลการเรียน (งานวัดผล)</h2>
+            <form id="adminApprovalForm">
+                <input type="hidden" id="adminApprovalRequestId">
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">นักเรียน:</label>
+                    <p id="adminApprovalStudentName" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">รหัสวิชา:</label>
+                    <p id="adminApprovalSubjectCode" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">รายวิชา:</label>
+                    <p id="adminApprovalSubjectName" class="font-semibold"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">ภาคเรียน/ปีการศึกษา:</label>
+                    <p id="adminApprovalSemester" class="font-semibold"></p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">เกรดเดิม:</label>
+                        <p id="adminApprovalOldGrade" class="font-semibold"></p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">เกรดที่ขอแก้ไข:</label>
+                        <p id="adminApprovalNewGrade" class="font-semibold"></p>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">งานที่ได้รับมอบหมาย:</label>
+                    <p id="adminApprovalReason" class="italic text-gray-600 border-l-4 border-gray-300 pl-3 py-2"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">ความคิดเห็นของครูผู้สอน:</label>
+                    <p id="adminApprovalTeacherComment" class="italic text-gray-600 border-l-4 border-gray-300 pl-3 py-2"></p>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="adminApprovalComment" class="block text-gray-700 mb-2">ความคิดเห็นของงานวัดผล:</label>
+                    <textarea id="adminApprovalComment" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelAdminApprovalBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md transition duration-300">ยกเลิก</button>
+                    <button type="button" id="rejectAdminApprovalBtn" class="btn-danger">ไม่อนุมัติ</button>
+                    <button type="button" id="approveAdminApprovalBtn" class="btn-success">อนุมัติ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Request Details Modal -->
+    <div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-6 text-gray-800">รายละเอียดคำร้อง</h2>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">รหัสคำร้อง:</label>
+                <p id="detailsRequestId" class="font-semibold"></p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">วันที่ยื่นคำร้อง:</label>
+                <p id="detailsDate" class="font-semibold"></p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">นักเรียน:</label>
+                <p id="detailsStudentName" class="font-semibold"></p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">รหัสวิชา:</label>
+                <p id="detailsSubjectCode" class="font-semibold"></p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">รายวิชา:</label>
+                <p id="detailsSubjectName" class="font-semibold"></p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">ภาคเรียน/ปีการศึกษา:</label>
+                <p id="detailsSemester" class="font-semibold"></p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 mb-2">เกรดเดิม:</label>
+                    <p id="detailsOldGrade" class="font-semibold"></p>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">เกรดที่ขอแก้ไข:</label>
+                    <p id="detailsNewGrade" class="font-semibold"></p>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">งานที่ได้รับมอบหมาย:</label>
+                <p id="detailsReason" class="italic text-gray-600 border-l-4 border-gray-300 pl-3 py-2"></p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">สถานะ:</label>
+                <p id="detailsStatus" class="font-semibold"></p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">ความคิดเห็นของครูผู้สอน:</label>
+                <p id="detailsTeacherComment" class="italic text-gray-600 border-l-4 border-gray-300 pl-3 py-2"></p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-700 mb-2">ความคิดเห็นของงานวัดผล:</label>
+                <p id="detailsAdminComment" class="italic text-gray-600 border-l-4 border-gray-300 pl-3 py-2"></p>
+            </div>
+            
+            <div class="flex justify-end">
+                <button type="button" id="closeDetailsBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md transition duration-300">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // === START REFACTORED SCRIPT FOR NETLIFY ===
+
+    // Global variables (เหมือนเดิม)
+    let currentUser = null;
+    let allUsers = [];
+    let allSubjects = [];
+    let allGrades = [];
+    let allRequests = [];
+    let currentFilter = 'all';
+    
+    // DOM Elements (เหมือนเดิม)
+    const loadingElement = document.getElementById('loading');
+    const loginFormElement = document.getElementById('loginForm');
+    const adminDashboardElement = document.getElementById('adminDashboard');
+    const teacherDashboardElement = document.getElementById('teacherDashboard');
+    const studentDashboardElement = document.getElementById('studentDashboard');
+    const loginErrorElement = document.getElementById('loginError');
+    
+    // Admin Tab Elements (เหมือนเดิม)
+    const adminSummaryTab = document.getElementById('adminTabSummary');
+    const adminAllRequestsTab = document.getElementById('adminTabAllRequests');
+    const adminPendingApprovalTab = document.getElementById('adminTabPendingApproval');
+    const adminSummaryContent = document.getElementById('adminSummaryContent');
+    const adminAllRequestsContent = document.getElementById('adminAllRequestsContent');
+    const adminPendingApprovalContent = document.getElementById('adminPendingApprovalContent');
+    
+    // Event Listeners (เหมือนเดิม)
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.getElementById('adminLogoutBtn').addEventListener('click', logout);
+    document.getElementById('teacherLogoutBtn').addEventListener('click', logout);
+    document.getElementById('studentLogoutBtn').addEventListener('click', logout);
+    document.getElementById('requestForm').addEventListener('submit', handleRequestSubmit);
+    document.getElementById('cancelRequestBtn').addEventListener('click', closeRequestModal);
+    document.getElementById('approveRequestBtn').addEventListener('click', () => handleUpdateRequestStatus('teacher_approved'));
+    document.getElementById('rejectRequestBtn').addEventListener('click', () => handleUpdateRequestStatus('rejected'));
+    document.getElementById('cancelReviewBtn').addEventListener('click', closeReviewModal);
+    document.getElementById('closeDetailsBtn').addEventListener('click', closeDetailsModal);
+    document.getElementById('approveAdminApprovalBtn').addEventListener('click', () => handleUpdateAdminApprovalStatus('approved'));
+    document.getElementById('rejectAdminApprovalBtn').addEventListener('click', () => handleUpdateAdminApprovalStatus('rejected'));
+    document.getElementById('cancelAdminApprovalBtn').addEventListener('click', closeAdminApprovalModal);
+    
+    adminSummaryTab.addEventListener('click', () => switchAdminTab('summary'));
+    adminAllRequestsTab.addEventListener('click', () => switchAdminTab('allRequests'));
+    adminPendingApprovalTab.addEventListener('click', () => switchAdminTab('pendingApproval'));
+    
+    document.getElementById('filterAllBtn').addEventListener('click', () => filterRequests('all'));
+    document.getElementById('filterPendingBtn').addEventListener('click', () => filterRequests('pending'));
+    document.getElementById('filterTeacherApprovedBtn').addEventListener('click', () => filterRequests('teacher_approved'));
+    document.getElementById('filterApprovedBtn').addEventListener('click', () => filterRequests('approved'));
+    document.getElementById('filterRejectedBtn').addEventListener('click', () => filterRequests('rejected'));
+
+    // --- Core Functions (REWRITTEN FOR NETLIFY) ---
+
+    // ฟังก์ชันสำหรับเรียก API ไปยัง Netlify Functions ของเรา
+    async function apiCall(endpoint, data) {
+        const response = await fetch(`/.netlify/functions/${endpoint}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            const errorInfo = await response.json();
+            throw new Error(errorInfo.message || `Server error at ${endpoint}`);
+        }
+        return response.json();
+    }
+
+    function init() {
+        showLoading();
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            loadDashboardData();
+        } else {
+            hideLoading();
+            showLoginForm();
+        }
+    }
+
+    async function handleLogin() {
+        showLoading();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            onLoginFailure('กรุณากรอกรหัสผู้ใช้และรหัสผ่าน');
+            return;
+        }
+
+        try {
+            const user = await apiCall('login', { username, password });
+            onLoginSuccess(user);
+        } catch (error) {
+            onLoginFailure(error.message);
+        }
+    }
+
+    function onLoginSuccess(user) {
+        if (user) {
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            loadDashboardData();
+        } else {
+            onLoginFailure('รหัสผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        }
+    }
+
+    function onLoginFailure(error) {
+        loginErrorElement.textContent = error;
+        loginErrorElement.classList.remove('hidden');
+        hideLoading();
+    }
+
+    function logout() {
+        localStorage.removeItem('currentUser');
+        currentUser = null;
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        loginErrorElement.classList.add('hidden');
+        adminDashboardElement.classList.add('hidden');
+        teacherDashboardElement.classList.add('hidden');
+        studentDashboardElement.classList.add('hidden');
+        loginFormElement.classList.remove('hidden');
+    }
+
+    async function loadDashboardData() {
+        showLoading();
+        try {
+            const role = currentUser.role;
+            const id = currentUser.id;
+            let data;
+
+            if (role === 'student') {
+                data = await apiCall('getStudentData', { id });
+            } else if (role === 'teacher') {
+                data = await apiCall('getTeacherData', { id });
+            } else if (role === 'admin') {
+                data = await apiCall('getAdminData', { id }); // Admin ดึงข้อมูลทั้งหมดในครั้งเดียว
+            }
+            onDataLoaded(data);
+        } catch (error) {
+            onDataLoadError(error.message);
+        }
+    }
+    
+    function onDataLoaded(data) {
+        if (!data) {
+            onDataLoadError("Received null data from server.");
+            return;
+        }
+        allUsers = data.users || [];
+        allSubjects = data.subjects || [];
+        allGrades = data.grades || [];
+        allRequests = data.requests || [];
+        showDashboard();
+    }
+
+    function onDataLoadError(error) {
+        console.error('Error loading data:', error);
+        alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + error);
+        hideLoading();
+    }
+
+    async function handleRequestSubmit(event) {
+        event.preventDefault();
+        showLoading();
+        
+        const requestData = {
+            studentId: currentUser.id,
+            subjectId: document.getElementById('requestSubjectId').value,
+            oldGrade: document.getElementById('requestOldGrade').value,
+            newGrade: document.getElementById('requestNewGrade').value,
+            reason: document.getElementById('requestReason').value,
+        };
+
+        if (!requestData.reason) {
+            alert('กรุณากรอกงานที่ได้รับมอบหมาย');
+            hideLoading();
+            return;
+        }
+
+        try {
+            const response = await apiCall('submitRequest', requestData);
+            onRequestSubmitted(response);
+        } catch (error) {
+            onRequestSubmitError(error.message);
+        }
+    }
+
+    function onRequestSubmitted(response) {
+        if (response.success) {
+            alert(response.message);
+            closeRequestModal();
+            loadDashboardData();
+        } else {
+            onRequestSubmitError(response.message);
+        }
+    }
+    
+    function onRequestSubmitError(error) {
+        console.error('Error submitting request:', error);
+        alert('เกิดข้อผิดพลาดในการยื่นคำร้อง: ' + error);
+        hideLoading();
+    }
+
+    async function handleUpdateRequestStatus(status) {
+        showLoading();
+        
+        const updateData = {
+            requestId: document.getElementById('reviewRequestId').value,
+            status: status,
+            finalGrade: document.getElementById('reviewFinalGrade').value,
+            comment: document.getElementById('reviewComment').value
+        };
+
+        try {
+            const response = await apiCall('updateRequestStatus', updateData);
+            onStatusUpdateSuccess(response);
+        } catch (error) {
+            onStatusUpdateError(error.message);
+        }
+    }
+
+    async function handleUpdateAdminApprovalStatus(status) {
+        showLoading();
+        
+        const updateData = {
+            requestId: document.getElementById('adminApprovalRequestId').value,
+            status: status,
+            comment: document.getElementById('adminApprovalComment').value
+        };
+
+        try {
+            const response = await apiCall('updateAdminApprovalStatus', updateData);
+            onStatusUpdateSuccess(response);
+        } catch (error) {
+            onStatusUpdateError(error.message);
+        }
+    }
+
+    function onStatusUpdateSuccess(response) {
+        if (response.success) {
+            alert(response.message);
+            closeReviewModal();
+            closeAdminApprovalModal();
+            loadDashboardData();
+        } else {
+            onStatusUpdateError(response.message);
+        }
+    }
+    
+    function onStatusUpdateError(error) {
+        console.error('Error updating status:', error);
+        alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ: ' + error);
+        hideLoading();
+    }
+
+    // --- UI Rendering Functions ---
+    // โค้ดส่วน UI ทั้งหมดตั้งแต่ฟังก์ชัน showDashboard() เป็นต้นไป
+    // สามารถคัดลอกมาวางต่อตรงนี้ได้เลยโดยไม่ต้องแก้ไข
+    // เนื่องจากมันทำงานกับ Global variables ที่เราได้มาจาก API แล้ว
+    
+    // (*** PASTE ALL YOUR REMAINING JAVASCRIPT FUNCTIONS HERE ***)
+    //  showDashboard(), showLoginForm(), switchAdminTab(), showAdminDashboard(), ... etc.
+    //  ...จนถึง hideLoading()
+
+    // (*** เริ่มคัดลอกโค้ด UI เดิมมาวางที่นี่ ***)
+    function showDashboard() {
+        loginFormElement.classList.add('hidden');
+        if (currentUser.role === 'admin') {
+            showAdminDashboard();
+        } else if (currentUser.role === 'teacher') {
+            showTeacherDashboard();
+        } else if (currentUser.role === 'student') {
+            showStudentDashboard();
+        }
+    }
+    
+    function showLoginForm() {
+        loginFormElement.classList.remove('hidden');
+        adminDashboardElement.classList.add('hidden');
+        teacherDashboardElement.classList.add('hidden');
+        studentDashboardElement.classList.add('hidden');
+    }
+    
+    function switchAdminTab(tab) {
+        adminSummaryTab.classList.remove('active');
+        adminAllRequestsTab.classList.remove('active');
+        adminPendingApprovalTab.classList.remove('active');
+        
+        adminSummaryContent.classList.add('hidden');
+        adminAllRequestsContent.classList.add('hidden');
+        adminPendingApprovalContent.classList.add('hidden');
+        
+        if (tab === 'summary') {
+            adminSummaryTab.classList.add('active');
+            adminSummaryContent.classList.remove('hidden');
+            updateAdminSummary();
+        } else if (tab === 'allRequests') {
+            adminAllRequestsTab.classList.add('active');
+            adminAllRequestsContent.classList.remove('hidden');
+            filterRequests('all');
+        } else if (tab === 'pendingApproval') {
+            adminPendingApprovalTab.classList.add('active');
+            adminPendingApprovalContent.classList.remove('hidden');
+            updatePendingApprovalTable();
+        }
+    }
+    
+    // (*** คัดลอกโค้ด UI ส่วนที่เหลือทั้งหมดมาวางต่อที่นี่... จนถึงฟังก์ชันสุดท้าย ***)
+    // ...
+    function hideLoading() {
+        loadingElement.classList.add('hidden');
+    }
+
+    // Initial load
+    init();
+
+    // === END REFACTORED SCRIPT ===
+</script>
+</body>
+</html>
