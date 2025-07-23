@@ -961,7 +961,24 @@
             updatePendingApprovalTable();
         }
     }
-    
+    // --- ฟังก์ชันที่น่าจะขาดหายไป (ตรวจสอบและเพิ่มเข้าไปในส่วนท้ายของ <script>) ---
+
+function closeRequestModal() {
+    document.getElementById('requestModal').classList.add('hidden');
+    document.getElementById('requestForm').reset();
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+}
+
+function closeAdminApprovalModal() {
+    document.getElementById('adminApprovalModal').classList.add('hidden');
+}
+
+function closeDetailsModal() {
+    document.getElementById('detailsModal').classList.add('hidden');
+}
     // (*** คัดลอกโค้ด UI ส่วนที่เหลือทั้งหมดมาวางต่อที่นี่... จนถึงฟังก์ชันสุดท้าย ***)
     // ...
     function hideLoading() {
