@@ -1,14 +1,22 @@
-exports.handler = async (event) => {
-  const { username } = JSON.parse(event.body);
+const { getSheet } = require('./_google-sheets-api.js');
 
-  // ไม่ต้องเช็ค password ไม่ต้องต่อ Google Sheet
-  // ส่งข้อมูลทดสอบกลับไปทันที เพื่อดูว่าโค้ดใหม่ถูก deploy หรือไม่
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      id: username,
-      name: "USER FROM LATEST CODE", // <-- ข้อความพิสูจน์
-      role: "admin",
-    }),
-  };
+exports.handler = async (event) => {
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
+    }
+    try {
+        const { username, password } = JSON.parse(event.body);
+        const usersSheet = await getSheet('Users');
+        const rows = await usersSheet.getRows();
+        const user = rows.find(u => u.id === username && u.password === String(password));
+
+        if (user) {
+            const userData = { id: user.id, name: user.name, role: user.role };
+            return { statusCode: 200, body: JSON.stringify(userData) };
+        } else {
+            return { statusCode: 200, body: JSON.stringify(null) };
+        }
+    } catch (error) {
+        return { statusCode: 500, body: JSON.stringify({ message: error.message }) };
+    }
 };
