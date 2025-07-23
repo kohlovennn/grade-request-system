@@ -31,7 +31,7 @@
 <body>
     <div id="loading" class="loading hidden"><div class="spinner"></div></div>
     <div id="loginForm" class="container mx-auto px-4 py-8 max-w-md"> ... (Login form HTML) ... </div>
-    <div id="adminDashboard" class="container mx-auto px-4 py-8 hidden"> ... (Admin Dashboard HTML with all tables, tabs, etc.) ... </div>
+    <div id="adminDashboard" class="container mx-auto px-4 py-8 hidden"> ... (Admin Dashboard HTML) ... </div>
     <div id="teacherDashboard" class="container mx-auto px-4 py-8 hidden"> ... (Teacher Dashboard HTML) ... </div>
     <div id="studentDashboard" class="container mx-auto px-4 py-8 hidden"> ... (Student Dashboard HTML) ... </div>
     <div id="requestModal" class="fixed inset-0 ... hidden z-50"> ... (Request Modal HTML) ... </div>
@@ -179,7 +179,6 @@
             getEl('adminLogoutBtn').addEventListener('click', logout);
             getEl('teacherLogoutBtn').addEventListener('click', logout);
             getEl('studentLogoutBtn').addEventListener('click', logout);
-            // ... add all other event listeners here
             
             const savedUser = localStorage.getItem('currentUser');
             if (savedUser) {
