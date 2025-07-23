@@ -987,7 +987,15 @@ function closeDetailsModal() {
 
     // Initial load
     init();
+// --- ฟังก์ชันตัวช่วยสำหรับ Loading และอื่นๆ ---
 
+function showLoading() {
+    document.getElementById('loading').classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loading').classList.add('hidden');
+}
     // === END REFACTORED SCRIPT ===
 </script>
 </body>
